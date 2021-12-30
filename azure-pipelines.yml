@@ -1,0 +1,33 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+resources:
+  webhooks:
+    - webhook: "rak-sayHello-webhook"          
+      connection: "Testing-Webhooks In AzDo"  
+
+steps:
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $body = '
+      { 
+              "definition": {
+                  "id": 901
+              } 
+      }
+      '
+      $bodyJson=$body | ConvertFrom-Json
+      Write-Output $bodyJson
+      $bodyString=$bodyJson | ConvertTo-Json -Depth 100
+      Write-Output $bodyString
+      $user="rakshith.k@capgemini.com"
+      $token="2cxbuh6e5hntenixjb2i2myikg7ujyhzyxqpkcat5yeibxqavpdq"
+      $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user,$token)))
+      
+      $Uri = "https://dev.azure.com/GAAzdoDevOpsDEV/BI_HFM_Cloud_PoC/_apis/pipelines/901/runs?api-version=6.0-preview.1"
+      $buildresponse = Invoke-RestMethod -Method Post -UseDefaultCredentials -ContentType application/json -Uri $Uri -Body $bodyString -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)}
+      write-host $buildresponse
